@@ -1,0 +1,310 @@
+================================================================================
+                            LITELLM PROJECT SUMMARY
+================================================================================
+
+PROJECT OVERVIEW
+----------------
+LiteLLM is a unified Python library and proxy server that provides a standardized 
+interface for calling multiple Large Language Model (LLM) API providers using the 
+OpenAI format. It acts as an LLM Gateway, translating requests to various providers 
+(Bedrock, Huggingface, VertexAI, TogetherAI, Azure, OpenAI, Groq, Anthropic, etc.) 
+and returning consistent OpenAI-formatted responses.
+
+ORGANIZATION
+------------
+- Company: BerriAI (Y Combinator W23)
+- License: MIT License (with enterprise features under separate license)
+- Version: 1.79.2
+- Python Support: >=3.8.1, <4.0 (excluding 3.9.7)
+
+KEY FEATURES
+------------
+1. Unified API Interface
+   - Translate inputs to provider-specific completion, embedding, and image 
+     generation endpoints
+   - Consistent OpenAI-format output across all providers
+   - Support for 100+ LLM providers
+
+2. LiteLLM Proxy Server (LLM Gateway)
+   - Track spending and usage across multiple projects
+   - Load balancing across multiple deployments
+   - Virtual key management with budgets and rate limits
+   - Authentication hooks and custom logging
+   - Cost tracking and rate limiting per project/API key/model
+   - Web UI for management (available at /ui)
+
+3. Reliability Features
+   - Retry/fallback logic across multiple deployments
+   - Router for intelligent request distribution
+   - Async support for high-performance applications
+   - Streaming support for all models
+
+4. Observability & Logging
+   - Pre-defined callbacks for logging tools (Lunary, MLflow, Langfuse, 
+     DynamoDB, S3, Helicone, Promptlayer, Traceloop, Athina, Slack)
+   - OpenTelemetry integration
+   - Prometheus metrics support
+
+SUPPORTED ENDPOINTS
+-------------------
+- /chat/completions (100+ providers)
+- /messages (Anthropic-style)
+- /responses
+- /embeddings
+- /image/generations
+- /audio/transcriptions
+- /audio/speech
+- /moderations
+- /batches
+- /rerank
+
+MAJOR PROVIDERS SUPPORTED
+-------------------------
+OpenAI, Anthropic, Azure, AWS Bedrock, Google (Vertex AI, Gemini), Cohere, 
+Huggingface, Replicate, Together AI, Anyscale, Mistral AI, Groq, Fireworks AI, 
+Deepseek, Perplexity, xAI, Meta Llama API, and 80+ more providers.
+
+PROJECT STRUCTURE
+-----------------
+/vercel/sandbox/
+├── litellm/                    # Core library source code
+│   ├── llms/                   # Provider-specific implementations
+│   ├── proxy/                  # Proxy server implementation
+│   ├── integrations/           # Third-party integrations
+│   ├── caching/                # Caching implementations
+│   ├── router.py               # Request routing logic
+│   ├── main.py                 # Main entry point
+│   └── utils.py                # Utility functions
+├── tests/                      # Test suite
+│   ├── test_litellm/          # Unit tests (mocked)
+│   ├── llm_translation/       # LLM provider translation tests
+│   ├── proxy_unit_tests/      # Proxy server unit tests
+│   └── local_testing/         # Integration tests
+├── ui/                         # Web dashboard (litellm-dashboard)
+├── docs/                       # Documentation
+├── enterprise/                 # Enterprise features (separate license)
+├── docker/                     # Docker configurations
+├── deploy/                     # Deployment configurations
+│   └── charts/                # Helm charts
+├── cookbook/                   # Example notebooks and recipes
+└── scripts/                    # Utility scripts
+
+TECHNOLOGY STACK
+----------------
+Core Dependencies:
+- Python >=3.8.1
+- OpenAI SDK >=1.99.5
+- Pydantic ^2.5.0 (data validation)
+- httpx >=0.23.0 (HTTP client)
+- tiktoken >=0.7.0 (tokenization)
+- aiohttp >=3.10 (async HTTP)
+- FastAPI >=0.120.1 (proxy server)
+- Uvicorn ^0.29.0 (ASGI server)
+
+Optional Dependencies:
+- Prisma 0.11.0 (database ORM)
+- Redis (caching)
+- PostgreSQL (key management)
+- Prometheus (metrics)
+- Azure/AWS/GCP SDKs (cloud integrations)
+
+Frontend:
+- Node.js 22
+- React (dashboard UI)
+- TypeScript/JavaScript
+
+DEVELOPMENT SETUP
+-----------------
+Requirements:
+- Python 3.8.1+
+- Poetry (dependency management)
+- Node.js 22 (for UI development)
+- Docker & Docker Compose (optional)
+
+Quick Start:
+1. Clone repository
+2. Install dependencies: make install-dev
+3. Run tests: make test-unit
+4. Format code: make format
+5. Run linting: make lint
+
+Proxy Server Development:
+1. Install proxy deps: make install-proxy-dev
+2. Set environment variables (LITELLM_MASTER_KEY, LITELLM_SALT_KEY)
+3. Start services: docker compose up db prometheus
+4. Run proxy: python litellm/proxy_cli.py
+5. Access UI: http://localhost:4000/ui
+
+TESTING STRATEGY
+----------------
+- Unit Tests: tests/test_litellm/ (mocked, no real API calls)
+- Integration Tests: tests/llm_translation/ (real provider tests)
+- Proxy Tests: tests/proxy_unit_tests/
+- Load Tests: tests/load_tests/
+- Helm Tests: deploy/charts/litellm-helm/tests/
+
+Test Execution:
+- make test-unit          # Run unit tests (parallel, fast)
+- make test-integration   # Run integration tests
+- make test-unit-helm     # Run Helm chart tests
+
+CODE QUALITY STANDARDS
+----------------------
+Follows Google Python Style Guide with automated checks:
+- Black: Code formatting (auto-fix with 'make format')
+- Ruff: Linting and code quality
+- MyPy: Static type checking
+- Circular import detection
+- Import safety validation
+
+All checks must pass before PR merge.
+
+DEPLOYMENT OPTIONS
+------------------
+1. Docker: Official images with -stable tag (12-hour load tested)
+2. Railway: One-click deploy
+3. Render: One-click deploy
+4. Kubernetes: Helm charts available
+5. Local: pip install litellm[proxy]
+
+USAGE EXAMPLES
+--------------
+Basic Usage:
+```python
+from litellm import completion
+response = completion(
+    model="openai/gpt-4o",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+Async Usage:
+```python
+from litellm import acompletion
+response = await acompletion(
+    model="anthropic/claude-sonnet-4-20250514",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+Streaming:
+```python
+response = completion(model="openai/gpt-4o", messages=messages, stream=True)
+for chunk in response:
+    print(chunk.choices[0].delta.content or "")
+```
+
+Proxy Server:
+```bash
+litellm --model huggingface/bigcode/starcoder
+# Server runs on http://0.0.0.0:4000
+```
+
+CONTRIBUTION REQUIREMENTS
+--------------------------
+Before submitting a PR:
+1. Sign the Contributor License Agreement (CLA)
+2. Add at least 1 test (hard requirement)
+3. Ensure all checks pass:
+   - make test-unit (unit tests)
+   - make lint (all linting checks)
+4. Keep scope isolated (one feature/fix per PR)
+5. Follow existing code conventions
+
+COMMUNITY & SUPPORT
+-------------------
+- Discord: https://discord.gg/wuPM9dRgDw
+- Slack: https://www.litellm.ai/support
+- Documentation: https://docs.litellm.ai
+- GitHub Issues: https://github.com/BerriAI/litellm/issues
+- Email: ishaan@berri.ai / krrish@berri.ai
+- Phone: +1 (770) 8783-106 / +1 (412) 618-6238
+
+ENTERPRISE OFFERING
+-------------------
+Available for companies needing:
+- Enhanced security and user management
+- Professional support (dedicated Discord/Slack)
+- Feature prioritization
+- Custom integrations
+- Custom SLAs
+- Single Sign-On (SSO)
+- Features under LiteLLM Commercial License
+
+RELEASE CYCLE
+-------------
+- Stable releases: Docker images with -stable tag
+- Load tested for 12 hours before publication
+- Regular updates and provider additions
+- Active development with 100+ contributors
+
+KEY DOCUMENTATION FILES
+-----------------------
+- README.md: Main project documentation
+- CONTRIBUTING.md: Contribution guidelines
+- LICENSE: MIT License with enterprise exceptions
+- AGENTS.md: AI agent integration guide
+- CLAUDE.md: Claude-specific documentation
+- GEMINI.md: Gemini-specific documentation
+- pyproject.toml: Python project configuration
+- Makefile: Development task automation
+
+NOTABLE FEATURES
+----------------
+1. Model Fallbacks: Automatic failover between providers
+2. Cost Tracking: Built-in cost calculation for all providers
+3. Caching: Redis/in-memory caching support
+4. Rate Limiting: Per-key, per-model, per-project limits
+5. Load Balancing: Intelligent request distribution
+6. Virtual Keys: Generate time-limited API keys with budgets
+7. Team Management: Multi-tenant support with team isolation
+8. Spend Tracking: Detailed usage analytics and reporting
+9. Webhooks: Event notifications for key events
+10. Custom Callbacks: Extensible logging and monitoring
+
+CONFIGURATION
+-------------
+Configuration via:
+- Environment variables (.env file)
+- YAML configuration files (proxy_server_config.yaml)
+- Python code (programmatic configuration)
+- Database (PostgreSQL for persistent config)
+
+Key environment variables:
+- LITELLM_MASTER_KEY: Admin authentication
+- LITELLM_SALT_KEY: Encryption key for credentials
+- DATABASE_URL: PostgreSQL connection string
+- REDIS_HOST/REDIS_PORT: Redis cache configuration
+
+MONITORING & OBSERVABILITY
+---------------------------
+- Prometheus metrics endpoint
+- OpenTelemetry tracing
+- Custom callback system
+- Integration with major observability platforms
+- Built-in health check endpoints
+- Detailed request/response logging
+
+SECURITY FEATURES
+-----------------
+- API key encryption at rest
+- Virtual key system with granular permissions
+- Rate limiting and abuse prevention
+- SSO integration (enterprise)
+- Azure Key Vault integration
+- Google Cloud KMS integration
+- Audit logging
+
+PROJECT MATURITY
+----------------
+- Production-ready with stable releases
+- Used by enterprise customers
+- Active community (100+ contributors)
+- Comprehensive test coverage
+- Regular security updates
+- Well-documented API and features
+- Y Combinator backed (W23)
+
+================================================================================
+                              END OF SUMMARY
+================================================================================
